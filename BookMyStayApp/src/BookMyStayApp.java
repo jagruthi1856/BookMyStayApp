@@ -1,12 +1,37 @@
-
+import java.util.HashMap;
+import java.util.Map;
 public class BookMyStayApp {
-    public static void main(String[] args) {
+    static class RoomInventory {
+        private Map<String, Integer> inventory;
+        public RoomInventory() {
+            inventory = new HashMap<>();
+            inventory.put("Single", 10);
+            inventory.put("Double", 5);
+            inventory.put("Deluxe", 3);
+        }
+        public int getAvailability(String roomType) {
+            return inventory.getOrDefault(roomType, 0);
+        }
+        public void updateAvailability(String roomType, int count) {
+            inventory.put(roomType, count);
+        }
+        public void displayInventory() {
+            System.out.println("Current Room Inventory:");
+            for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
+                System.out.println(entry.getKey() + " Rooms: " + entry.getValue());
+            }
+        }
+    }
 
-        System.out.println("======================================");
-        System.out.println("   Welcome to Book My Stay App");
-        System.out.println("   Hotel Booking System v1.0");
-        System.out.println("======================================");
-        System.out.println("Application started successfully.");
-        System.out.println("Thank you for using Book My Stay App!");
+    public static void main(String[] args) {
+        RoomInventory inventory = new RoomInventory();
+        inventory.displayInventory();
+        System.out.println("\nChecking availability for Double room:");
+        System.out.println("Available: " + inventory.getAvailability("Double"));
+        System.out.println("\nUpdating Double room availability to 4...");
+        inventory.updateAvailability("Double", 4);
+
+        System.out.println("\nUpdated Inventory:");
+        inventory.displayInventory();
     }
 }

@@ -1,6 +1,63 @@
-class BookingSystem {
+import java.io.*;
+class HotelData implements Serializable {
+    String[] roomTypes;
+    int[] availability;
+    public HotelData(String[] roomTypes, int[] availability) {
+        this.roomTypes = roomTypes;
+        this.availability = availability;
+    }
+}
+public class BookMyStayApp {
     static String[] roomTypes = {"Single", "Double", "Suite"};
-    static int[] availability = {2, 2, 1}; // small numbers to show conflicts
+    static int[] availability = {5, 3, 2};
+    static final String FILE_NAME = "hotel_data.ser";
+    public static void saveData() {
+        try {
+            FileOutputStream fileOut = new FileOutputStream(FILE_NAME);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            HotelData data = new HotelData(roomTypes, availability);
+            out.writeObject(data);
+            out.close();
+            fileOut.close();
+            System.out.println("Data saved successfully.");
+        } catch (IOException e) {
+            System.out.println("Error saving data: " + e.getMessage());
+        }
+    }
+    public static void loadData() {
+        try {
+            FileInputStream fileIn = new FileInputStream(FILE_NAME);
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            HotelData data = (HotelData) in.readObject();
+            roomTypes = data.roomTypes;
+            availability = data.availability;
+            in.close();
+            fileIn.close();
+            System.out.println("Data loaded successfully.");
+
+        } catch (FileNotFoundException e) {
+            System.out.println("No saved data found. Starting fresh.");
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error loading data. Starting with default values.");
+        }
+    }
+    public static void bookRoom(String roomType, int quantity) {
+        int index = findRoomIndex(roomType);
+        if (index == -1) {
+            System.out.println("Invalid room type");
+            return;
+        }
+        if (quantity <= 0) {
+            System.out.println("Invalid quantity");
+            return;
+        }
+        if (quantity > availability[index]) {
+            System.out.println("Not enough rooms available");
+            return;
+        }
+        availability[index] -= quantity;
+        System.out.println("Booked " + quantity + " " + roomType + " room(s)");
+    }
     public static int findRoomIndex(String roomType) {
         for (int i = 0; i < roomTypes.length; i++) {
             if (roomTypes[i].equals(roomType)) {
@@ -9,56 +66,20 @@ class BookingSystem {
         }
         return -1;
     }
-    public synchronized void bookRoom(String guestName, String roomType) {
-        int index = findRoomIndex(roomType);
-        if (index == -1) {
-            System.out.println(guestName + ": Invalid room type");
-            return;
-        }
-        if (availability[index] > 0) {
-            System.out.println(guestName + " is booking " + roomType + "...");
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            availability[index]--;
-            System.out.println(guestName + " successfully booked " + roomType +
-                    ". Remaining: " + availability[index]);
-        } else {
-            System.out.println(guestName + ": No " + roomType + " rooms available");
+    public static void displayRooms() {
+        System.out.println("\nCurrent Inventory:");
+        for (int i = 0; i < roomTypes.length; i++) {
+            System.out.println(roomTypes[i] + " -> " + availability[i]);
         }
     }
-}
-class GuestThread extends Thread {
-    BookingSystem system;
-    String guestName;
-    String roomType;
-    public GuestThread(BookingSystem system, String guestName, String roomType) {
-        this.system = system;
-        this.guestName = guestName;
-        this.roomType = roomType;
-    }
-    public void run() {
-        system.bookRoom(guestName, roomType);
-    }
-}
-public class BookMyStayApp {
     public static void main(String[] args) {
-        BookingSystem system = new BookingSystem();
-        GuestThread g1 = new GuestThread(system, "Guest1", "Single");
-        GuestThread g2 = new GuestThread(system, "Guest2", "Single");
-        GuestThread g3 = new GuestThread(system, "Guest3", "Single");
-        GuestThread g4 = new GuestThread(system, "Guest4", "Double");
-        GuestThread g5 = new GuestThread(system, "Guest5", "Double");
-        GuestThread g6 = new GuestThread(system, "Guest6", "Suite");
-        GuestThread g7 = new GuestThread(system, "Guest7", "Suite");
-        g1.start();
-        g2.start();
-        g3.start();
-        g4.start();
-        g5.start();
-        g6.start();
-        g7.start();
+        loadData();
+        displayRooms();
+        System.out.println("\nBooking Rooms...");
+        bookRoom("Single", 2);
+        bookRoom("Suite", 1);
+        displayRooms();
+        System.out.println("\nSaving data before exit...");
+        saveData();
     }
 }

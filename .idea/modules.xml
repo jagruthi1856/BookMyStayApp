@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/B2P1__Ra2411056010282.iml" filepath="$PROJECT_DIR$/.idea/B2P1__Ra2411056010282.iml" />
       <module fileurl="file://$PROJECT_DIR$/BookMyStayApp/BookMyStayApp.iml" filepath="$PROJECT_DIR$/BookMyStayApp/BookMyStayApp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Book_My_Stay_App/Book_My_Stay_App.iml" filepath="$PROJECT_DIR$/Book_My_Stay_App/Book_My_Stay_App.iml" />
     </modules>
   </component>
 </project>

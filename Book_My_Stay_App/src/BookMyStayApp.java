@@ -1,36 +1,52 @@
-class InvalidBookingException extends Exception {
-    public InvalidBookingException(String message) {
+import java.util.Stack;
+class InvalidCancellationException extends Exception {
+    public InvalidCancellationException(String message) {
         super(message);
     }
 }
-
-public class BookMyStayApp {
+public class BookMyStayApp{
     static String[] roomTypes = {"Single", "Double", "Suite"};
     static int[] availability = {5, 3, 2};
+    static boolean[] booked = {false, false, false};
+    static Stack<String> rollbackStack = new Stack<>();
     public static int findRoomIndex(String roomType) {
         for (int i = 0; i < roomTypes.length; i++) {
             if (roomTypes[i].equals(roomType)) {
                 return i;
             }
         }
-        return -1; // not found
+        return -1;
     }
-    public static void bookRoom(String roomType, int quantity) throws InvalidBookingException {
+    public static void bookRoom(String roomType) {
         int index = findRoomIndex(roomType);
         if (index == -1) {
-            throw new InvalidBookingException("Invalid room type: " + roomType);
+            System.out.println("Invalid room type");
+            return;
         }
-        if (quantity <= 0) {
-            throw new InvalidBookingException("Quantity must be greater than 0");
+        if (availability[index] <= 0) {
+            System.out.println("No rooms available");
+            return;
         }
-        if (quantity > availability[index]) {
-            throw new InvalidBookingException("Not enough rooms available");
+        availability[index]--;
+        booked[index] = true;
+        rollbackStack.push(roomType);
+        System.out.println("Booking successful for " + roomType);
+    }
+    public static void cancelBooking(String roomType) throws InvalidCancellationException {
+        int index = findRoomIndex(roomType);
+        if (index == -1) {
+            throw new InvalidCancellationException("Invalid room type");
         }
-        if (availability[index] - quantity < 0) {
-            throw new InvalidBookingException("Inventory cannot go negative");
+        if (!booked[index]) {
+            throw new InvalidCancellationException("No booking exists for " + roomType);
         }
-        availability[index] -= quantity;
-        System.out.println("Booking successful! Remaining " + roomType + ": " + availability[index]);
+        if (rollbackStack.isEmpty() || !rollbackStack.peek().equals(roomType)) {
+            throw new InvalidCancellationException("Cancellation must follow latest booking (LIFO)");
+        }
+        rollbackStack.pop();
+        availability[index]++;
+        booked[index] = false;
+        System.out.println("Cancellation successful for " + roomType);
     }
     public static void displayRooms() {
         System.out.println("\nCurrent Inventory:");
@@ -38,33 +54,29 @@ public class BookMyStayApp {
             System.out.println(roomTypes[i] + " -> " + availability[i]);
         }
     }
-
     public static void main(String[] args) {
         displayRooms();
+        System.out.println("\n--- Booking Rooms ---");
+        bookRoom("Single");
+        bookRoom("Double");
+        displayRooms();
         try {
-            System.out.println("\nValid Booking:");
-            bookRoom("Single", 2);
-        } catch (InvalidBookingException e) {
-            System.out.println("Error: " + e.getMessage());
-        }
-        try {
-            System.out.println("\nInvalid Room Type:");
-            bookRoom("Deluxe", 1);
+            System.out.println("\n--- Valid Cancellation ---");
+            cancelBooking("Double");
 
-        } catch (InvalidBookingException e) {
+        } catch (InvalidCancellationException e) {
             System.out.println("Error: " + e.getMessage());
         }
         try {
-            System.out.println("\nInvalid Quantity:");
-            bookRoom("Double", 0);
-
-        } catch (InvalidBookingException e) {
+            System.out.println("\n--- Invalid Cancellation (LIFO violation) ---");
+            cancelBooking("Single");
+        } catch (InvalidCancellationException e) {
             System.out.println("Error: " + e.getMessage());
         }
         try {
-            System.out.println("\nOverbooking:");
-            bookRoom("Suite", 5);
-        } catch (InvalidBookingException e) {
+            System.out.println("\n--- Invalid Cancellation (No booking) ---");
+            cancelBooking("Suite");
+        } catch (InvalidCancellationException e) {
             System.out.println("Error: " + e.getMessage());
         }
         displayRooms();
